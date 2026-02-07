@@ -27,6 +27,9 @@
             --math-font: 'Times New Roman', serif;
         }
 
+        /* FIX: Apply border-box globally to handle padding correctly on mobile */
+        * { box-sizing: border-box; }
+
         body {
             margin: 0; background-color: var(--bg-dark);
             background-image: 
@@ -34,7 +37,9 @@
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
             background-size: 30px 30px;
             color: #eee; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            height: 100vh; width: 100vw; overflow: hidden;
+            height: 100vh; 
+            width: 100%; /* FIX: Changed from 100vw to 100% to prevent overflow */
+            overflow: hidden;
             display: flex; flex-direction: column;
         }
 
@@ -119,7 +124,7 @@
         .btn-rec { color: #f44; border-color: #522; }
         .btn-rec.recording { background: #f44; color: #fff; animation: pulse 1s infinite; }
 
-        input[type="text"], input[type="range"] { width: 100%; box-sizing: border-box; }
+        input[type="text"], input[type="range"] { width: 100%; /* box-sizing handled by global reset */ }
         input[type="text"] { background: #1a1a1a; border: 1px solid #444; color: var(--primary); padding: 8px; border-radius: 4px; }
         input[type="range"] { accent-color: var(--primary); margin: 10px 0; }
         
