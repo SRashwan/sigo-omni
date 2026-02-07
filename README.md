@@ -2,8 +2,6 @@
 
 **Sigo Omni** is a professional-grade, web-based Digital Signal Processing (DSP) laboratory. It visualizes the physics of Radio Frequency (RF) modulation in real-time and bridges the gap between the browser and the physical world using a hybrid architecture.
 
-![Sigo Omni Dashboard](https://via.placeholder.com/800x400?text=Sigo+Omni+Hybrid+Interface)
-*(Replace with actual screenshot)*
 
 ## 🚀 Key Features
 
