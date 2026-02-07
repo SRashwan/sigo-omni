@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sigo Omni | Hardware Edition</title>
+    <title>Sigo Omni | Hybrid Architecture</title>
     
     <script>
     window.MathJax = {
@@ -21,7 +21,6 @@
             --primary: #FFC107;      
             --primary-dim: #FF9800;  
             --accent-cyan: #00E5FF;  
-            --accent-green: #00E676;
             --bg-dark: #050508;
             --glass: rgba(18, 18, 24, 0.95);
             --glass-border: rgba(255, 193, 7, 0.3);
@@ -39,7 +38,7 @@
             display: flex; flex-direction: column;
         }
 
-        /* --- Header --- */
+        /* Header */
         header {
             flex-shrink: 0; padding: 12px 20px;
             display: flex; justify-content: space-between; align-items: center;
@@ -55,12 +54,12 @@
         }
         .icon-btn:hover { background: var(--primary); color: #000; }
 
-        /* --- Layout --- */
+        /* Layout */
         .scroll-wrapper { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; display: flex; justify-content: center; }
         .dashboard { display: grid; grid-template-columns: 1fr 350px; gap: 15px; width: 100%; max-width: 1400px; padding-bottom: 40px; }
         @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } }
 
-        /* --- Cards --- */
+        /* Cards */
         .card {
             background: var(--glass); border: 1px solid var(--glass-border);
             border-radius: 8px; padding: 15px; margin-bottom: 15px;
@@ -72,7 +71,7 @@
             padding-bottom: 5px; display: flex; justify-content: space-between;
         }
 
-        /* --- Scopes --- */
+        /* Scopes */
         .scope-container { position: relative; background: #000; border-radius: 4px; overflow: hidden; border: 1px solid #333; }
         .h-large { height: 220px; }
         .h-medium { height: 120px; }
@@ -82,7 +81,7 @@
             background: rgba(0,0,0,0.8); color: var(--accent-cyan); padding: 2px 5px; border-radius: 3px; pointer-events: none;
         }
 
-        /* --- Math Panel --- */
+        /* Math Panel */
         .math-panel {
             margin-top: 10px; background: rgba(0,0,0,0.6); border-radius: 6px; 
             border-left: 3px solid var(--primary); font-family: var(--math-font); 
@@ -103,7 +102,7 @@
         .show-callout { opacity: 1; transform: translateY(0px); }
         #math-container { font-size: 1.3em; padding: 10px 0; display: flex; justify-content: center; align-items: center; }
 
-        /* --- Controls --- */
+        /* Controls */
         .btn-group { display: flex; gap: 4px; margin-bottom: 10px; background: #222; padding: 3px; border-radius: 6px; }
         .btn-toggle {
             flex: 1; background: transparent; border: none; color: #888; padding: 8px;
@@ -138,7 +137,7 @@
 <header>
     <div class="brand">
         SIGO OMNI 
-        <span class="live-badge">HARDWARE</span>
+        <span class="live-badge">HYBRID</span>
     </div>
     <div style="display:flex; gap:10px">
         <button class="icon-btn" id="btn-mute"><span class="material-icons">volume_off</span></button>
@@ -193,27 +192,34 @@
                 <h3>Input Source</h3>
                 <div class="btn-group">
                     <button class="btn-toggle active" onclick="setInputMode('text')">TEXT</button>
-                    <button class="btn-toggle" onclick="setInputMode('serial')">ARDUINO</button>
+                    <button class="btn-toggle" onclick="setInputMode('serial')">HARDWARE</button>
                     <button class="btn-toggle" onclick="setInputMode('mic')">MIC</button>
                     <button class="btn-toggle" onclick="setInputMode('video')">CAM</button>
                 </div>
 
                 <div id="ctrl-text" class="input-ctrl">
                     <label>DATA STREAM</label>
-                    <input type="text" id="inp-text" value="ARDUINO IO" placeholder="Message...">
+                    <input type="text" id="inp-text" value="SHERIF RASHWAN" placeholder="Message...">
                 </div>
 
                 <div id="ctrl-serial" class="input-ctrl" style="display:none">
-                    <button class="action-btn" onclick="initSerial()">
-                        <span class="material-icons">usb</span> CONNECT ARDUINO
-                    </button>
+                    <label>CONNECTION METHOD</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <button class="action-btn" onclick="initSerial()">
+                            <span class="material-icons">usb</span> WEB SERIAL
+                        </button>
+                        <button class="action-btn" onclick="initWebSocket()">
+                            <span class="material-icons">lan</span> EXE BRIDGE
+                        </button>
+                    </div>
+                    
                     <div id="serial-status" style="font-size:0.7em; color:#888; margin-top:5px; text-align:center">
                         Status: Disconnected
                     </div>
+                    
                     <div style="font-size:0.7em; margin-top:10px; padding:8px; background:#222; border-radius:4px; color:#aaa">
-                        <strong>Library Logic:</strong><br>
-                        Read: <code>Serial.print("D:val")</code><br>
-                        Write: LED Brightness (Pin 3)
+                        <strong>Web Serial:</strong> Chrome/Edge Only. Direct USB.<br>
+                        <strong>EXE Bridge:</strong> Runs <code>sigo_bridge.exe</code> locally. Works on all browsers.
                     </div>
                 </div>
 
@@ -271,59 +277,65 @@
     };
     for(let i=0; i<512; i++) { state.bufRGB.r.push(0); state.bufRGB.g.push(0); state.bufRGB.b.push(0); }
 
-    // --- Serial (Arduino) ---
-    let port, reader, writer;
+    // --- HARDWARE CONNECTIVITY ---
     
+    // Method 1: Web Serial
     async function initSerial() {
-        if (!navigator.serial) { alert("Web Serial not supported in this browser. Use Chrome/Edge."); return; }
+        if (!navigator.serial) { alert("Web Serial not supported here. Try the EXE Bridge."); return; }
         try {
-            port = await navigator.serial.requestPort();
+            const port = await navigator.serial.requestPort();
             await port.open({ baudRate: 115200 });
-            document.getElementById('serial-status').innerText = "Status: Connected";
+            document.getElementById('serial-status').innerText = "Connected via USB";
             
-            // Setup Reader
             const textDecoder = new TextDecoderStream();
             const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
             const reader = textDecoder.readable.getReader();
             
-            // Setup Writer
-            const textEncoder = new TextEncoderStream();
-            const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
-            writer = textEncoder.writable.getWriter();
-
-            readLoop(reader);
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                parseSerialData(value);
+            }
         } catch (e) { alert("Serial Error: " + e); }
     }
 
-    async function readLoop(reader) {
-        let buffer = "";
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            buffer += value;
-            // Parse lines
-            let lines = buffer.split('\n');
-            buffer = lines.pop(); // Keep incomplete line
-            
-            for (let line of lines) {
-                if (line.startsWith("D:")) {
-                    let val = parseInt(line.substring(2));
-                    // Map 0-100 to -1 to 1
-                    state.serialVal = (val - 50) / 50.0;
-                }
-            }
+    // Method 2: WebSocket Bridge (EXE)
+    function initWebSocket() {
+        const ws = new WebSocket('ws://localhost:8765');
+        
+        ws.onopen = () => {
+            document.getElementById('serial-status').innerText = "Connected via Bridge (EXE)";
+            document.getElementById('serial-status').style.color = "#0f0";
+        };
+        
+        ws.onmessage = (event) => {
+            // Bridge sends raw value "0" to "100"
+            const val = parseInt(event.data);
+            state.serialVal = (val - 50) / 50.0; // Map to -1..1
+        };
+
+        ws.onclose = () => {
+            document.getElementById('serial-status').innerText = "Bridge Disconnected";
+            document.getElementById('serial-status').style.color = "#f44";
+        };
+        
+        ws.onerror = () => {
+            alert("Could not connect to Bridge. Is 'sigo_bridge.exe' running?");
         }
     }
 
-    async function sendToArduino(val) {
-        if(writer) {
-            // Map -1..1 to 0..255 for PWM
-            let pwm = Math.floor(((val + 1) / 2) * 255);
-            pwm = Math.max(0, Math.min(255, pwm));
-            // We just send raw byte for simplicity in this demo, 
-            // In reality, we might need a protocol, but the library provided just reads bytes.
-            const data = new Uint8Array([pwm]);
-            await writer.write(data);
+    let serialBuffer = "";
+    function parseSerialData(chunk) {
+        serialBuffer += chunk;
+        if(serialBuffer.includes('\n')) {
+            const lines = serialBuffer.split('\n');
+            serialBuffer = lines.pop(); // Keep partial
+            for(let line of lines) {
+                if(line.startsWith("D:")) {
+                    const val = parseInt(line.split(':')[1]);
+                    state.serialVal = (val - 50) / 50.0;
+                }
+            }
         }
     }
 
@@ -397,7 +409,7 @@
         
         let eq = "";
         if(state.mode==='FM') {
-            eq = `$$ s(t) = A_c \\cos\\left(2\\pi f_c t + 2\\pi k_f \\smallint m(t) dt\\right) $$`;
+            eq = `$$ s(t) = A_c \\cos\\left(2\\pi f_c t + 2\\pi k_f \\int m(t) dt\\right) $$`;
             addCallout("Carrier", "25%", "5px"); addCallout("Freq Shift", "50%", "5px");
         } else if(state.mode==='AM') {
             eq = `$$ s(t) = [1 + k_a m(t)] \\cos(2\\pi f_c t) $$`;
@@ -482,11 +494,6 @@
         // 3. OUTPUT & REC
         if(state.recording) state.csvData.push(`${state.time.toFixed(3)},${mt.toFixed(3)},${st.toFixed(3)},${mt.toFixed(3)}`);
         
-        // Send to Arduino periodically
-        if(state.input === 'serial' && Math.floor(state.time*60)%10 === 0) {
-            sendToArduino(mt); 
-        }
-
         if(!state.muted && actx) {
             oscOut.frequency.setTargetAtTime(400+(mt*200), actx.currentTime, 0.05);
         }
